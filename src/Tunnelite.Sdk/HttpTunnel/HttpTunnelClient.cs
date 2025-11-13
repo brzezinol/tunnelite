@@ -122,7 +122,7 @@ public class HttpTunnelClient : ITunnelClient
             // Copy headers from public response to local request
             foreach (var (key, value) in publicResponse.Headers)
             {
-                if (key.StartsWith("X-TR-"))
+                if (key.StartsWith("X-TR-", StringComparison.OrdinalIgnoreCase))
                 {
                     localRequest.Headers.TryAddWithoutValidation(key[5..], value);
                 }
@@ -349,7 +349,8 @@ public class HttpTunnelClient : ITunnelClient
 
     private async Task<HttpTunnelResponse?> RegisterTunnelAsync(HttpTunnelRequest tunnel)
     {
-        tunnel.Subdomain = _currentTunnel?.Subdomain;
+        if(_currentTunnel != null)
+            tunnel.Subdomain = _currentTunnel?.Subdomain;
 
         HttpTunnelResponse? tunnelResponse = null;
 

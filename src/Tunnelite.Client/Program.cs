@@ -14,6 +14,10 @@ public class Program
     public static async Task Main(string[] args)
     {
         var localUrlArgument = new Argument<string>("localUrl", "The local URL to tunnel to.");
+        var subdomainOption = new Option<string>(
+            "--subdomain",
+            () => null,
+            "Subdomain name idntifying your tunnel");
         var logLevelOption = new Option<LogLevel?>(
             "--log",
             () => null,
@@ -26,12 +30,13 @@ public class Program
         var rootCommand = new RootCommand
         {
             localUrlArgument,
+            subdomainOption,
             publicUrlOption,
             logLevelOption
         };
         rootCommand.Description = "CLI tool to create a tunnel to a local server.";
 
-        rootCommand.SetHandler(async (string localUrl, string publicUrl, LogLevel? logLevel) =>
+        rootCommand.SetHandler(async (string localUrl, string subdomain, string publicUrl, LogLevel? logLevel) =>
         {
             if (string.IsNullOrWhiteSpace(localUrl))
             {
@@ -69,7 +74,7 @@ public class Program
                         case "http":
                         case "https":
 
-                            await InitializeHttpTunnel(localUrl, publicUrl, logLevel, ctx);
+                            await InitializeHttpTunnel(localUrl, subdomain, publicUrl, logLevel, ctx);
                             break;
 
                         default:
@@ -80,7 +85,7 @@ public class Program
 
             await RunMainLoop(localUrl);
 
-        }, localUrlArgument, publicUrlOption, logLevelOption);
+        }, localUrlArgument, subdomainOption, publicUrlOption, logLevelOption);
 
         await rootCommand.InvokeAsync(args);
     }
@@ -107,13 +112,14 @@ public class Program
         ctx.Status("TCP tunnel established.");
     }
 
-    private static async Task InitializeHttpTunnel(string localUrl, string publicUrl, LogLevel? logLevel, StatusContext ctx)
+    private static async Task InitializeHttpTunnel(string localUrl, string subdomain, string publicUrl, LogLevel? logLevel, StatusContext ctx)
     {
         var httpTunnel = new HttpTunnelRequest
         {
             ClientId = ClientId,
             LocalUrl = localUrl,
             PublicUrl = publicUrl,
+            Subdomain = subdomain
         };
 
         ctx.Status("Connecting to HTTP tunnel...");

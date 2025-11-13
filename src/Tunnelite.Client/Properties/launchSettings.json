@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Tunnelite.Client": {
+      "commandName": "Project",
+      "commandLineArgs": "https://dev-pbr.spedtrans.online --subdomain stm --publicUrl https://deeplake.pl:8443 --log Debug"
+    }
+  }
+}
