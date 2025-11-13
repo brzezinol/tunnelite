@@ -29,7 +29,14 @@ public class TcpTunnelHub(TcpTunnelStore tunnelStore, TcpClientStore tcpClientSt
 
         try
         {
-            tcpListenerContext.TcpListener = new TcpListener(IPAddress.Any, tunnel.PublicPort ?? 0);
+            int port = tunnel.PublicPort ?? 0;
+
+            if(port == 0)
+            {
+                port = GetAvailablePort(30000, 35000);
+            }
+
+            tcpListenerContext.TcpListener = new TcpListener(IPAddress.Any, port);
             tcpListenerContext.CancellationTokenSource = new CancellationTokenSource();
 
             tcpListenerContext.TcpListener.Start();
@@ -209,5 +216,27 @@ public class TcpTunnelHub(TcpTunnelStore tunnelStore, TcpClientStore tcpClientSt
     private static Guid GetClientId(HubCallerContext context)
     {
         return Guid.Parse(context.GetHttpContext()!.Request.Query["clientId"].ToString());
+    }
+
+    private int GetAvailablePort(int minPort, int maxPort)
+    {
+        var random = new Random();
+        for (int i = 0; i < 50; i++)
+        {
+            int port = random.Next(minPort, maxPort + 1);
+            try
+            {
+                using var listener = new TcpListener(IPAddress.Loopback, port);
+                listener.Start();
+                listener.Stop();
+                return port; // port wolny
+            }
+            catch (SocketException)
+            {
+                // port zajęty — próbujemy następny
+            }
+        }
+
+        throw new InvalidOperationException("Nie znaleziono wolnego portu w zadanym zakresie.");
     }
 }
