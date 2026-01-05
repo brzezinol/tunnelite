@@ -26,17 +26,22 @@ public class Program
             "--publicUrl",
             () => "https://tunnelite.com",
             "The public server URL.");
+        var publicPortOption = new Option<int>(
+            "--publicPort",
+            () => 0,
+            "The public port for TCP tunnels (0 for random).");
 
         var rootCommand = new RootCommand
         {
             localUrlArgument,
             subdomainOption,
             publicUrlOption,
+            publicPortOption,
             logLevelOption
         };
         rootCommand.Description = "CLI tool to create a tunnel to a local server.";
 
-        rootCommand.SetHandler(async (string localUrl, string subdomain, string publicUrl, LogLevel? logLevel) =>
+        rootCommand.SetHandler(async (string localUrl, string subdomain, string publicUrl, int publicPort, LogLevel? logLevel) =>
         {
             if (string.IsNullOrWhiteSpace(localUrl))
             {
@@ -68,7 +73,7 @@ public class Program
                     {
                         case "tcp":
 
-                            await InitializeTcpTunnel(localUrl, publicUrl, uri, logLevel, ctx);
+                            await InitializeTcpTunnel(localUrl, publicUrl, publicPort, uri, logLevel, ctx);
                             break;
 
                         case "http":
@@ -85,18 +90,19 @@ public class Program
 
             await RunMainLoop(localUrl);
 
-        }, localUrlArgument, subdomainOption, publicUrlOption, logLevelOption);
+        }, localUrlArgument, subdomainOption, publicUrlOption, publicPortOption, logLevelOption);
 
         await rootCommand.InvokeAsync(args);
     }
 
-    private static async Task InitializeTcpTunnel(string localUrl, string publicUrl, Uri uri, LogLevel? logLevel, StatusContext ctx)
+    private static async Task InitializeTcpTunnel(string localUrl, string publicUrl, int publicPort,  Uri uri, LogLevel? logLevel, StatusContext ctx)
     {
         var tcpTunnel = new TcpTunnelRequest
         {
             ClientId = ClientId,
             LocalUrl = localUrl,
             PublicUrl = publicUrl,
+            PublicPort = publicPort,
             Host = uri.Host,
             LocalPort = uri.Port,
         };

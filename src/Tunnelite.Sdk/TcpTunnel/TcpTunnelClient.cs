@@ -89,7 +89,8 @@ public class TcpTunnelClient : ITunnelClient
 
     public async Task<TcpTunnelResponse?> RegisterTunnelAsync(TcpTunnelRequest tunnel)
     {
-        tunnel.PublicPort = _currentTunnel?.Port;
+        if(_currentTunnel!=null)
+            tunnel.PublicPort = _currentTunnel?.Port;
 
         TcpTunnelResponse? tunnelResponse = null;
 
